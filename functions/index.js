@@ -1,22 +1,49 @@
 const functions = require("firebase-functions");
-const admin = require("firebase-admin");
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
-const serviceAccount = require("./service/ServiceAccountKey.json");
+var multer  = require('multer')
+var upload = multer()
+const projectId = "my-project-e122f" //replace with your project id
+const bucketName = `${projectId}.appspot.com`;
+var admin = require("firebase-admin");
+
+var serviceAccount = require("./service/ServiceAccountKey.json");
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: bucketName
+  });
+let db = admin.firestore();
+let storage = admin.storage();
+var storageRef = storage.bucket();
 
 app.use(require("cors")({ origin: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  storageBucket: "my-project-e122f.appspot.com"
-});
-let db = admin.firestore();
+
+
 
 function capitalize(string) {
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
+
+
+app.post('/profile', upload.single('image'), function (req, res, next) {
+  var filename = req.file;
+  console.log(filename)
+  storageRef.upload(`/home/twin/Downloads/${filename.originalname}`, {
+    destination: `/image/${req.file.originalname}`,
+    public: true,
+}, function (err, file) {
+    if (err) {
+        console.log(err);
+        return;
+    }
+    console.log(createPublicFileURL(`image/${req.file.originalname}`));
+});
+})
+
 app.get("/get", async function(req, res) {
   const data = [];
   await db
@@ -129,9 +156,12 @@ app.delete("/delete", async function(req, res) {
       res.json({ "Error delete document: ": error });
     });
 });
+function createPublicFileURL(storageName) {
+  return `http://storage.googleapis.com/${bucketName}/${encodeURIComponent(storageName)}`;
+}
 
 app.listen(1337, function() {
-  console.log("backend run port 8085");
+  console.log("backend run port 1337");
 });
 
 exports.app = functions.https.onRequest(app);

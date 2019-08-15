@@ -1,14 +1,12 @@
-const keyFilename = require("./service/ServiceAccountKey.json");
 const projectId = "my-project-e122f" //replace with your project id
 const bucketName = `${projectId}.appspot.com`;
-var {Storage}  = require('@google-cloud/storage');
 var admin = require("firebase-admin");
 
 var serviceAccount = require("./service/ServiceAccountKey.json");
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    storageBucket: "my-project-e122f.appspot.com"
+    storageBucket: bucketName
   });
 let db = admin.firestore();
 let storage = admin.storage();
@@ -27,6 +25,5 @@ storageRef.upload("./service/mnk.jpeg", {
 
 function createPublicFileURL(storageName) {
     return `http://storage.googleapis.com/${bucketName}/${encodeURIComponent(storageName)}`;
-
 }
 //var bucket = admin.storage().bucket();
