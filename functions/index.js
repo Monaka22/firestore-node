@@ -2,7 +2,8 @@ const functions = require("firebase-functions");
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
-var multer  = require('multer')
+const formidable = require("formidable");
+var multer  = require('multer');
 var upload = multer()
 const projectId = "my-project-e122f" //replace with your project id
 const bucketName = `${projectId}.appspot.com`;
@@ -28,10 +29,47 @@ function capitalize(string) {
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
 
+app.post('/upload',async function (req,res) {
+  try {
+    const form = new formidable.IncomingForm();
+    form.parse(req, async (error, fields, files) => {
+      var filename = files.image;
+      //console.log(filename)
+      storageRef.upload(filename.path, {
+        destination: `/image/${filename.name}`,
+        public: true,
+    },async function (err, file) {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        let picPath = await createPublicFileURL(`image/${filename.name}`);
+        let data = {
+          name: capitalize(fields.name),
+          age: fields.age,
+          band: fields.band,
+          image: picPath
+        };
+        //console.log(data);
+        await db
+          .collection("idols")
+          .add(data)
+          .then(function(docRef) {
+            res.json({ "Document written with ID: ": docRef.id });
+          })
+          .catch(function(error) {
+            res.json({ "Error adding document: ": error });
+          });
+    });
+    });
+  } catch (error) {
+    res.json({ result: "notOk", message: JSON.stringify(error) });
+  }
+})
 
 app.post('/profile', upload.single('image'), function (req, res, next) {
   var filename = req.file;
-  console.log(filename)
+  console.log(filename.size)
   storageRef.upload(`/home/twin/Downloads/${filename.originalname}`, {
     destination: `/image/${req.file.originalname}`,
     public: true,
