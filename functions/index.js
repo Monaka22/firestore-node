@@ -23,19 +23,16 @@ app.use(require("cors")({ origin: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-
-
 function capitalize(string) {
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
-
 app.post('/upload',async function (req,res) {
   try {
     const form = new formidable.IncomingForm();
-    form.parse(req, async (error, fields, files) => {
+     await form.parse(req, async (error, fields, files) => {
       var filename = files.image;
       //console.log(filename)
-      storageRef.upload(filename.path, {
+     await storageRef.upload(filename.path, {
         destination: `/image/${filename.name}`,
         public: true,
     },async function (err, file) {
@@ -54,11 +51,12 @@ app.post('/upload',async function (req,res) {
         await db
           .collection("idols")
           .add(data)
-          .then(function(docRef) {
-            res.json({ "Document written with ID: ": docRef.id });
+          .then(async function(docRef) {
+           await res.status(200).json({ "Document written with ID: ": docRef.id });
+           await res.end();
           })
-          .catch(function(error) {
-            res.json({ "Error adding document: ": error });
+          .catch(async function(error) {
+          await res.json({ "Error adding document: ": error });
           });
     });
     });
@@ -66,7 +64,6 @@ app.post('/upload',async function (req,res) {
     res.json({ result: "notOk", message: JSON.stringify(error) });
   }
 })
-
 app.post('/profile', upload.single('image'), function (req, res, next) {
   var filename = req.file;
   console.log(filename.size)
@@ -81,22 +78,23 @@ app.post('/profile', upload.single('image'), function (req, res, next) {
     console.log(createPublicFileURL(`image/${req.file.originalname}`));
 });
 })
-
 app.get("/get", async function(req, res) {
   const data = [];
   await db
     .collection("idols")
+    .orderBy("name")
     .get()
-    .then(snapshot => {
-      snapshot.forEach(doc => {
-        data.push(Object.assign({ id: doc.id }, doc.data()));
+    .then(async snapshot => {
+      snapshot.forEach(async doc => {
+      await data.push(Object.assign({ id: doc.id }, doc.data()));
       });
-      return res.json({
+      await res.status(200).json({
         draw: 0,
         recordsTotal: data.length,
         recordsFiltered: data.length,
         data: data
       });
+      await res.end();
     })
     .catch(err => {
       console.log("Error getting documents", err);
@@ -108,14 +106,15 @@ app.get("/getById/:id", async function(req, res) {
     .collection("idols")
     .doc(req.params.id)
     .get()
-    .then(snapshot => {
-      data.push(Object.assign({ id: snapshot.id }, snapshot.data()));
-      return res.json({
+    .then(async snapshot => {
+      await data.push(Object.assign({ id: snapshot.id }, snapshot.data()));
+      await res.status(200).json({
         draw: 0,
         recordsTotal: data.length,
         recordsFiltered: data.length,
         data: data
       });
+      await res.end();
     })
     .catch(err => {
       console.log("Error getting documents", err);
@@ -126,23 +125,24 @@ app.get("/get/:keyword", async function(req, res) {
   if (req.params.keyword === "") {
     return res.redirect("/get");
   }
-  let idolRef = db.collection("idols");
+  let idolRef = await db.collection("idols");
   await idolRef
     .orderBy("name")
     .startAt(capitalize(req.params.keyword))
     .endAt(capitalize(req.params.keyword) + "\uf8ff")
     .get()
     //idolRef.where('name', '>=', req.params.keyword).where('name', '<=', req.params.keyword) .get()
-    .then(snapshot => {
-      snapshot.forEach(doc => {
-        data.push(Object.assign({ id: doc.id }, doc.data()));
+    .then(async snapshot => {
+      snapshot.forEach(async doc => {
+      await data.push(Object.assign({ id: doc.id }, doc.data()));
       });
-      return res.json({
+      await res.status(200).json({
         draw: 0,
         recordsTotal: data.length,
         recordsFiltered: data.length,
         data: data
       });
+      await res.end();
     })
     .catch(err => {
       console.log("Error getting documents", err);
@@ -158,8 +158,9 @@ app.post("/add", async function(req, res) {
   await db
     .collection("idols")
     .add(data)
-    .then(function(docRef) {
-      res.json({ "Document written with ID: ": docRef.id });
+    .then(async function(docRef) {
+    await  res.status(200).json({ "Document written with ID: ": docRef.id });
+    await  res.end();
     })
     .catch(function(error) {
       res.json({ "Error adding document: ": error });
@@ -175,10 +176,10 @@ app.put("/update", async function(req, res) {
     .collection("idols")
     .doc(req.body.id)
     .set(data)
-    .then(function() {
-      res.json({ "mesagess: ": "update complete" });
-    })
-    .catch(function(error) {
+    .then(async function() {
+      await res.status(200).json({ "mesagess: ": "update complete" });
+      await res.end();    
+    }).catch(function(error) {
       res.json({ "Error update document: ": error });
     });
 });
@@ -187,13 +188,14 @@ app.delete("/delete", async function(req, res) {
     .collection("idols")
     .doc(req.body.id)
     .delete()
-    .then(function() {
-      res.json({ "mesagess: ": "delete complete" });
-    })
-    .catch(function(error) {
+    .then(async function() {
+      await res.status(200).json({ "mesagess: ": "delete complete" });
+      await res.end();  
+    }).catch(function(error) {
       res.json({ "Error delete document: ": error });
     });
 });
+
 function createPublicFileURL(storageName) {
   return `http://storage.googleapis.com/${bucketName}/${encodeURIComponent(storageName)}`;
 }
