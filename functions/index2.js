@@ -12,8 +12,8 @@ let db = admin.firestore();
 let storage = admin.storage();
 var storageRef = storage.bucket();
 
-storageRef.upload("./service/mnk.jpeg", {
-    destination: '/image/image2.jpg',
+storageRef.upload("./service/mnk.jpeg", { //file upload
+    destination: '/image/image2.jpg', // new file name
     public: true,
 }, function (err, file) {
     if (err) {
