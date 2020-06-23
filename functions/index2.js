@@ -20,7 +20,7 @@ storageRef.upload("./service/mnk.jpeg", { //file upload
         console.log(err);
         return;
     }
-    console.log(createPublicFileURL('image2.jpg'));
+    console.log(createPublicFileURL('image2.jpg')); // สร้างลิงค์ให้ไฟล์
 });
 
 function createPublicFileURL(storageName) {
