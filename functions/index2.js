@@ -1,8 +1,8 @@
 const projectId = "my-project-e122f" //replace with your project id
 const bucketName = `${projectId}.appspot.com`;
-var admin = require("firebase-admin");
+const admin = require("firebase-admin");
 
-var serviceAccount = require("./service/ServiceAccountKey.json");
+const serviceAccount = require("./service/ServiceAccountKey.json");
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -10,7 +10,7 @@ admin.initializeApp({
   });
 let db = admin.firestore();
 let storage = admin.storage();
-var storageRef = storage.bucket();
+let storageRef = storage.bucket();
 
 storageRef.upload("./service/mnk.jpeg", { //file upload
     destination: '/image/image2.jpg', // new file name
